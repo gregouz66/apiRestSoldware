@@ -1,7 +1,12 @@
 security:
+    encoders:
+        FOS\UserBundle\Model\UserInterface: bcrypt
+
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        in_memory: { memory: ~ }
+        fos_userbundle:
+            id: fos_user.user_provider.username_email
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -9,16 +14,27 @@ security:
         main:
             anonymous: true
 
-            # activate different ways to authenticate
+            pattern: ^/
 
-            # http_basic: true
-            # https://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
+            # form_login:
+            #     login_path: connexion
+            #     check_path: connexion
+            #     provider: fos_userbundle
+            #     target_path_parameter: connexion
+            #     failure_path_parameter: connexion
+                # csrf_token_generator: security.csrf.token_manager
 
-            # form_login: true
-            # https://symfony.com/doc/current/security/form_login_setup.html
+            # logout:
+            #     path: /logout
+            #     target: /
+
+    role_hierarchy:
+        ROLE_USER:        ROLE_USER # user front-end
+        ROLE_ADMIN:       ROLE_USER # admin (minimum level to access back-office)
+        ROLE_SUPER_ADMIN: [ROLE_USER, ROLE_ADMIN] # super-admin
+        #ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # - { path: ^/myarticle, roles: IS_AUTHENTICATED_ANONYMOUSLY }
