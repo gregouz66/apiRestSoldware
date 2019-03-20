@@ -6,52 +6,55 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
 use Symfony\Component\HttpFoundation\Request;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
-use App\Entity\Article;
-use App\Form\ArticleType;
+// use App\Entity\Article;
+// use App\Form\ArticleType;
 
 /**
- * Article controller.
+ * Articles controller.
  * @Route("/api", name="api_")
  */
 class ArticleController extends FOSRestController
 {
-
       /**
        * Lists all Articles.
        * @Rest\Get("/articles")
        *
        * @return Response
        */
-      public function getArticleAction()
+      public function getArticlesAction(ObjectManager $manager)
       {
-        $repository = $this->getDoctrine()->getRepository(Article::class);
-        $articles = $repository->findall();
-        return $this->handleView($this->view($articles));
+        $conn = $manager->getConnection();
+        $sql = '
+                SELECT * FROM article a
+        ';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $data = $stmt->fetchAll();
+
+        return $this->handleView($this->view($data, 200));
       }
 
-
       /**
-       * Create Article.
-       * @Rest\Post("/article")
+       * Lists Article by id.
+       * @Rest\Get("/article/{id}"), requirements={"id" = "\d+"}, defaults={"id" = 1})
        *
        * @return Response
        */
-      public function postArticleAction(Request $request)
+      public function getArticleByIdAction($id, ObjectManager $manager)
       {
-        $article = new Article();
-        $form = $this->createForm(ArticleType::class, $article);
-        $data = json_decode($request->getContent(), true);
-        $form->submit($data);
-        if ($form->isSubmitted() && $form->isValid()) {
-          $em = $this->getDoctrine()->getManager();
-          $em->persist($article);
-          $em->flush();
-          return $this->handleView($this->view(['status' => 'ok'], Response::HTTP_CREATED));
-        }
-        return $this->handleView($this->view($form->getErrors()));
-      }
+        $conn = $manager->getConnection();
+        $sql = '
+                SELECT * FROM article a
+                WHERE a.id = :id
+        ';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        $data = $stmt->Fetch();
 
+        return $this->handleView($this->view($data, 200));
+      }
 }
